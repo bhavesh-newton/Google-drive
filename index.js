@@ -40,10 +40,14 @@ app.post('/signin', async (req, res) => {
                 email
             };
             const secret = process.env.JWT_SECRET;
+            const refreshSecret = process.env.REFRESH_JWT_SECRET;
             const token = jwt.sign(payload, secret, {
                 expiresIn: '24h'
             })
-            res.send({ token })
+            const refreshToken = jwt.sign(payload, refreshSecret, {
+                expiresIn: '48h'
+            })
+            res.send({ token, refreshToken })
         } else {
             res.status(401).send('Wrong password.')
         }
@@ -61,6 +65,8 @@ function authenticationMiddleware(req, res, next) {
         res.status(401).send("Unauthorized user.")
     }
 }
+
+
 
 
 
