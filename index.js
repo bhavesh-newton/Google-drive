@@ -25,6 +25,22 @@ app.post('/signup', async (req, res) => {
     }
 });
 
+app.post('/auth-token', (req, res) => {
+    const refreshToken = req.headers.refreshtoken;
+    try {
+        const { name, email } = jwt.verify(refreshToken, process.env.REFRESH_JWT_SECRET);
+        const token = jwt.sign({ name, email }, process.env.JWT_SECRET, {
+            expiresIn: '24h'
+        })
+        const newRefreshToken = jwt.sign({ name, email }, process.env.REFRESH_JWT_SECRET, {
+            expiresIn: '48h'
+        })
+        res.send({ token, refreshToken: newRefreshToken })
+    } catch (err) {
+        res.status(401).send('Unauthorised user')
+    }
+})
+
 app.post('/signin', async (req, res) => {
     const { email, password } = req.body;
     const user = await prismaClient.users.findUnique({
