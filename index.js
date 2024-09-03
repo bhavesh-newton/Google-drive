@@ -52,24 +52,31 @@ app.post('/signin', async (req, res) => {
     }
 })
 
-app.get('/user/:userId', async (req, res) => {
-    const token = req.headers.authorization;
+function authenticationMiddleware(req, res, next) {
     try {
-        jwt.verify(token, process.env.JWT_SECRET);
-        const { userId } = req.params;
-        const user = await prismaClient.users.findUnique({
-            where: {
-                id: Number(userId)
-            }
-        })
-        res.send({
-            id: userId,
-            name: user.name,
-            email: user.email
-        })
-    } catch(err) {
-        res.status(401).send('Unauthorized user.')
+        const token = req.headers.authorization
+        jwt.verify(authToken, process.env.JWT_SECRET)
+        next()
+    } catch (err) {
+        res.status(401).send("Unauthorized user.")
     }
+}
+
+
+
+app.get('/user/:userId', authenticationMiddleware, async (req, res) => {
+    const { userId } = req.params;
+    const user = await prismaClient.users.findUnique({
+        where: {
+            id: Number(userId)
+        }
+    })
+    res.send({
+        id: userId,
+        name: user.name,
+        email: user.email
+    })
+
 })
 
 app.get('/files-and-folders/*', (req, res) => {
